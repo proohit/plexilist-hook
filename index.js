@@ -36,7 +36,10 @@ router.post('/webhook', async (ctx) => {
       (userMapping) => userMapping.plexName === username
     );
     if (!user || !user.anilistToken) {
-      logger.error('Plex User has no AniList entry');
+      logger.error({
+        message: `Plex User ${username} has no AniList entry`,
+        timestamp: new Date().toISOString(),
+      });
       return;
     }
     const AniList = new AnilistClient(user.anilistToken);
