@@ -30,33 +30,36 @@ router.post('/webhook', async (ctx) => {
   } = webhookEvent;
 
   logger.info({ event, username, title, season, episode, guid });
-
-  const anidbId = getAnidbId(guid);
-  const user = config.anilistUsers.find(
-    (userMapping) => userMapping.plexName === username
-  );
-  const AniList = new AnilistClient(user.anlistToken);
-  const [mapping, mappingError] = await AnidbAnilistMapping.getByAniDBId(
-    anidbId
-  );
-  if (mappingError) {
-    logger.error(mappingError);
-    return;
-  }
-  const { anilist: anilistId } = mapping;
-  const [anime, queryError] = await AniList.queryMedia(anilistId);
-  if (queryError) {
-    logger.error(queryError);
-    return;
-  }
-  let status = calculateStatus(episode, anime.episodes);
-  if (!status) return;
-  const [, saveListError] = await AniList.saveListMediaEntry(anilistId, {
-    progress: episode,
-    status,
-  });
-  if (saveListError) {
-    logger.error(saveListError);
+  try {
+    const anidbId = getAnidbId(guid);
+    const user = config.anilistUsers.find(
+      (userMapping) => userMapping.plexName === username
+    );
+    const AniList = new AnilistClient(user.anilistToken);
+    const [mapping, mappingError] = await AnidbAnilistMapping.getByAniDBId(
+      anidbId
+    );
+    if (mappingError) {
+      logger.error(mappingError);
+      return;
+    }
+    const { anilist: anilistId } = mapping;
+    const [anime, queryError] = await AniList.queryMedia(anilistId);
+    if (queryError) {
+      logger.error(queryError);
+      return;
+    }
+    let status = calculateStatus(episode, anime.episodes);
+    if (!status) return;
+    const [, saveListError] = await AniList.saveListMediaEntry(anilistId, {
+      progress: episode,
+      status,
+    });
+    if (saveListError) {
+      logger.error(saveListError);
+    }
+  } catch (error) {
+    logger.error(error);
   }
 });
 
