@@ -44,7 +44,12 @@ async function handleScrobble(plexEvent) {
 
 function getAnidbId(guid) {
   const anidbIdRegExp = RegExp(/anidb-\d{1,}/g);
-  return anidbIdRegExp.exec(guid)[0].split('-')[1];
+  const result = anidbIdRegExp.exec(guid);
+  if (!result || result.length <= 0) {
+    throw new AppError(`Couldn't extract anidb id for guid: ${guid}`);
+  }
+
+  return result[0].split('-')[1];
 }
 
 function calculateStatus(currentEpisode, maxEpisodes) {
