@@ -4,7 +4,7 @@ const now = new Date();
 const nowString = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}_${now.getHours()}-${now.getMinutes()}-${now.getSeconds()}`;
 const logger = winston.createLogger({
   level: 'info',
-  format: winston.format.json(),
+  format: winston.format.json({ space: 2 }),
   transports: [
     new winston.transports.Console(),
     new winston.transports.File({

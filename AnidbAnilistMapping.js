@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const AppError = require('./AppError');
 
 class AnidbAnilistMapping {
   static #BASE_URL = 'https://relations.yuna.moe/api';
@@ -15,18 +16,14 @@ class AnidbAnilistMapping {
       );
       const mapping = await res.json();
       if (mapping.error) {
-        throw mapping;
+        throw new Error(JSON.stringify(mapping));
       }
-      return [mapping, null];
+      return mapping;
     } catch (error) {
-      return [
-        null,
-        {
-          error,
-          message: `Could not fetch Anidb Mapping for id ${anidbId}`,
-          timestamp: new Date().toISOString(),
-        },
-      ];
+      throw new AppError(
+        `Could not fetch Anidb Mapping for id ${anidbId}`,
+        error
+      );
     }
   }
 }

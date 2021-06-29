@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const AppError = require('./AppError');
 
 class AnilistClient {
   #accessToken;
@@ -24,18 +25,14 @@ class AnilistClient {
     const variables = { mediaId: id, progress, status };
     try {
       const data = await this.fetch(mutation, variables);
-      return [data, null];
+      return data;
     } catch (error) {
-      return [
-        null,
-        {
-          error,
-          message: `Couldn't update list entry media for context ${{
-            ...variables,
-          }}`,
-          timestamp: new Date().toISOString(),
-        },
-      ];
+      throw new AppError(
+        `Couldn't update list entry media for context ${JSON.stringify(
+          variables
+        )}`,
+        error
+      );
     }
   }
 
@@ -49,16 +46,12 @@ class AnilistClient {
     const variables = { id };
     try {
       const data = await this.fetch(query, variables);
-      return [data.Media, null];
+      if (!data.Media || data.errors) {
+        throw new Error(JSON.stringify(data));
+      }
+      return data.Media;
     } catch (error) {
-      return [
-        null,
-        {
-          error,
-          message: `Couldn't query media for id ${id}`,
-          timestamp: new Date().toISOString(),
-        },
-      ];
+      throw new AppError(`Couldn't query media for id ${id}`, error);
     }
   }
 
@@ -83,8 +76,8 @@ class AnilistClient {
 
     const res = await fetch(url, options);
     const json = await res.json();
-    if (!json.data && json.errors) {
-      throw json.errors;
+    if (!json.data || json?.errors?.length > 0) {
+      throw new Error(JSON.stringify(json.errors));
     }
     return json.data;
   }
