@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Page Title</title>
+  </head>
+  <body>
+    <p id="content"></p>
+    <form method="POST" action="/anilist-callback">
+      <label for="plexName"
+        >Plex Username/Email (the one that shows in the user selection
+        screen)</label
+      >
+      <input type="text" id="plexName" name="plexName" /><br /><br />
+      <input type="hidden" id="access_token" name="access_token" />
+      <input type="submit" value="Submit" />
+    </form>
+    <script>
+      const hash = window.location.hash;
+      const keyValues = hash
+        .replace('#', '')
+        .split('&')
+        .map((v) => v.split('='))
+        .reduce((pre, [key, value]) => {
+          pre[key] = value;
+          return pre;
+        }, {});
+      document.getElementById('access_token').value = keyValues.access_token;
+    </script>
+  </body>
+</html>
