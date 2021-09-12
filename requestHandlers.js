@@ -2,6 +2,7 @@ const fs = require('fs');
 const PlexWebHookEvent = require('./PlexWebHookEvent');
 const logger = require('./logger');
 const { handleScrobble, handleRate } = require('./eventHandlers');
+let config = require('./config.json');
 
 async function handleWebhook(ctx) {
   try {
@@ -46,6 +47,14 @@ async function anilistRedirect(ctx) {
   ctx.res.statusCode = 200;
 }
 
+async function anilistLogin(ctx) {
+  let html = fs.readFileSync('anilist-login.html', { encoding: 'utf-8' });
+  html = html.replace('{#clientId}', config.clientId);
+  ctx.body = html;
+  ctx.type = 'html';
+  ctx.res.statusCode = 200;
+}
+
 async function addNewAnilistUser(ctx) {
   const { plexName, access_token } = ctx.request.body;
   ctx.response.status = 400;
@@ -60,7 +69,6 @@ async function addNewAnilistUser(ctx) {
     ctx.response.body = 'Missing plex name.';
     return;
   }
-  const config = JSON.parse(fs.readFileSync('config.json'));
   const newUser = { plexName, anilistToken: access_token };
   let newUsers = [...config['anilistUsers']];
   if (newUsers.find((user) => user.plexName === plexName)) {
@@ -75,10 +83,13 @@ async function addNewAnilistUser(ctx) {
   }
   config['anilistUsers'] = newUsers;
   fs.writeFileSync('config.json', JSON.stringify(config));
+  delete require.cache[require.resolve('./config.json')];
+  config = require('./config.json');
 }
 
 module.exports = {
   handleWebhook,
   anilistRedirect,
+  anilistLogin,
   addNewAnilistUser,
 };

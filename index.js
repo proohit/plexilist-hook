@@ -6,6 +6,7 @@ const {
   anilistRedirect,
   handleWebhook,
   addNewAnilistUser,
+  anilistLogin,
 } = require('./requestHandlers');
 
 const app = new Koa();
@@ -16,6 +17,7 @@ router.use(body({ multipart: true }));
 router.post('/webhook', handleWebhook);
 
 router.get('/anilist-callback', anilistRedirect);
+router.get('/anilist-login', anilistLogin);
 
 router.post('/anilist-callback', addNewAnilistUser);
 
