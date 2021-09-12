@@ -1,13 +1,16 @@
 const fs = require('fs');
 const PlexWebHookEvent = require('./PlexWebHookEvent');
 const logger = require('./logger');
-const { handleScrobble } = require('./eventHandlers');
+const { handleScrobble, handleRate } = require('./eventHandlers');
 
 async function handleWebhook(ctx) {
   try {
     const webhookEvent = new PlexWebHookEvent(ctx.request.body.payload);
     if (shouldHandleScrobble(webhookEvent)) {
       await handleScrobble(webhookEvent);
+    }
+    if (shouldHandleRate(webhookEvent)) {
+      await handleRate(webhookEvent);
     }
   } catch (error) {
     logger.error(error.toString());
@@ -19,6 +22,16 @@ function shouldHandleScrobble(event) {
     return false;
   }
   if (event.Metadata.type !== 'episode') {
+    return false;
+  }
+  if (event.Metadata.librarySectionTitle !== 'Anime') {
+    return false;
+  }
+  return true;
+}
+
+function shouldHandleRate(event) {
+  if (event.event !== 'media.rate') {
     return false;
   }
   if (event.Metadata.librarySectionTitle !== 'Anime') {

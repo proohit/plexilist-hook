@@ -36,6 +36,33 @@ class AnilistClient {
     }
   }
 
+  async saveRating(id, rating) {
+    const mutation = `mutation ($mediaId: Int, $scoreRaw: Int) {
+      SaveMediaListEntry(mediaId: $mediaId, scoreRaw: $scoreRaw) {
+        media {
+          title {
+            romaji
+            english
+            native
+            userPreferred
+          }
+        }
+        score(format: POINT_100)
+      }
+    }
+    `;
+
+    const variables = { mediaId: id, scoreRaw: rating };
+    try {
+      return this.fetch(mutation, variables);
+    } catch (error) {
+      throw new AppError(
+        `Couldn't rate media for context ${JSON.stringify(variables)}`,
+        error
+      );
+    }
+  }
+
   async queryMedia(id) {
     const query = `query ($id: Int) {
         Media(id: $id, type: ANIME) {

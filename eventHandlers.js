@@ -18,12 +18,7 @@ async function handleScrobble(plexEvent) {
 
   logger.info({ event, username, title, season, episode, guid });
   const anidbId = getAnidbId(guid);
-  const user = config.anilistUsers.find(
-    (userMapping) => userMapping.plexName === username
-  );
-  if (!user || !user.anilistToken) {
-    throw new AppError(`Plex User ${username} has no AniList entry`);
-  }
+  const user = getUserFromConfig(username);
   const AniList = new AnilistClient(user.anilistToken);
   const mapping = await AnidbAnilistMapping.getByAniDBId(anidbId);
   const { anilist: anilistId } = mapping;
@@ -63,6 +58,40 @@ function calculateStatus(currentEpisode, maxEpisodes) {
   return status;
 }
 
+async function handleRate(plexEvent) {
+  const {
+    event,
+    Account: { title: username },
+    Metadata: { grandparentTitle: title, guid },
+    rating: ratingRaw,
+  } = plexEvent;
+  const rating = Number(ratingRaw) * 10;
+  logger.info({ event, username, title, guid, rating });
+  const anidbId = getAnidbId(guid);
+  const user = getUserFromConfig(username);
+  const AniList = new AnilistClient(user.anilistToken);
+  const mapping = await AnidbAnilistMapping.getByAniDBId(anidbId);
+  const { anilist: anilistId } = mapping;
+  const { SaveMediaListEntry: data } = await AniList.saveRating(
+    anilistId,
+    rating
+  );
+  logger.info(
+    `User ${username} rated Media \"${data.media.title.english}\" to ${data.score} points`
+  );
+}
+
+function getUserFromConfig(username) {
+  const user = config.anilistUsers.find(
+    (userMapping) => userMapping.plexName === username
+  );
+  if (!user || !user.anilistToken) {
+    throw new AppError(`Plex User ${username} has no AniList entry`);
+  }
+  return user;
+}
+
 module.exports = {
   handleScrobble,
+  handleRate,
 };
