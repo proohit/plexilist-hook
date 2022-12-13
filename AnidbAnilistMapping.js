@@ -1,9 +1,8 @@
-const fetch = require('node-fetch');
-const AppError = require('./AppError');
+const fetch = require("node-fetch");
+const AppError = require("./AppError");
 
 class AnidbAnilistMapping {
-  static #BASE_URL = 'https://relations.yuna.moe/api';
-  static #IDS_URL = `${this.#BASE_URL}/ids`;
+  static #BASE_URL = "https://find-my-anime.dtimur.de/api";
 
   constructor() {
     //   private constructor
@@ -12,11 +11,14 @@ class AnidbAnilistMapping {
   static async getByAniDBId(anidbId) {
     try {
       const res = await fetch(
-        `${AnidbAnilistMapping.#IDS_URL}?source=anidb&id=${anidbId}`
+        `${AnidbAnilistMapping.#BASE_URL}?provider=AniDB&id=${anidbId}`
       );
       const mapping = await res.json();
       if (mapping.error) {
         throw new Error(JSON.stringify(mapping));
+      }
+      if (Array.isArray(mapping) && mapping.length > 0) {
+        return mapping[0];
       }
       return mapping;
     } catch (error) {

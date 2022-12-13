@@ -1,8 +1,8 @@
-const AnilistClient = require('./AniListClient');
-const AnidbAnilistMapping = require('./AnidbAnilistMapping');
-const config = require('./config.json');
-const logger = require('./logger');
-const AppError = require('./AppError');
+const AnilistClient = require("./AniListClient");
+const AnidbAnilistMapping = require("./AnidbAnilistMapping");
+const config = require("./config.json");
+const logger = require("./logger");
+const AppError = require("./AppError");
 
 async function handleScrobble(plexEvent) {
   const {
@@ -21,7 +21,11 @@ async function handleScrobble(plexEvent) {
   const user = getUserFromConfig(username);
   const AniList = new AnilistClient(user.anilistToken);
   const mapping = await AnidbAnilistMapping.getByAniDBId(anidbId);
-  const { anilist: anilistId } = mapping;
+  if (!mapping || !mapping.providerMapping.Anilist) {
+    logger.info(`No mapping found for ${title} (${anidbId})`);
+    return;
+  }
+  const anilistId = mapping.providerMapping.Anilist;
   const anime = await AniList.queryMedia(anilistId);
   let status = calculateStatus(episode, anime.episodes);
   if (!status) return;
@@ -44,14 +48,14 @@ function getAnidbId(guid) {
     throw new AppError(`Couldn't extract anidb id for guid: ${guid}`);
   }
 
-  return result[0].split('-')[1];
+  return result[0].split("-")[1];
 }
 
 function calculateStatus(currentEpisode, maxEpisodes) {
   if (currentEpisode >= maxEpisodes) {
-    status = 'COMPLETED';
+    status = "COMPLETED";
   } else if (currentEpisode < maxEpisodes) {
-    status = 'CURRENT';
+    status = "CURRENT";
   } else {
     status = null;
   }
